@@ -1,4 +1,8 @@
 # hext
+[todo.sr.ht][todo]
+
+[todo]: https://todo.sr.ht/~genbyte/hext
+
 Do you find yourself exploring file formats, such as GIF, and finding yourself
 annoyed with hex editors? Do you find yourself wanting to craft 802.11 packets,
 but you know you'll never be able to keep all the fields straight in your head?
