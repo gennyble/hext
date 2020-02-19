@@ -13,8 +13,5 @@ Write those packets in hext! hext (`*.hxt`) is a file format for writing small
 10
 ```
 
-The above file is the same as
-```
-QWERTY
-A
-```
+The above file, once run through hext, is the same as the string:
+`QWERTY\n\rAB\n`
