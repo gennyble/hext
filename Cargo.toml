@@ -1,0 +1,8 @@
+[package]
+name = "hext"
+version = "0.1.0"
+authors = ["genuinebyte <bja@genuinebyte.com>"]
+edition = "2018"
+
+[dependencies]
+bitvec = "0.17.2"
