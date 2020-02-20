@@ -16,7 +16,7 @@ fn main() {
 
         do_hext(&raw);
     } else {
-        argv.remove(0);  // Throw away the first element (program name)
+        argv.remove(0); // Throw away the first element (program name)
         for arg in argv {
             let raw = match fs::read_to_string(arg) {
                 Ok(raw) => raw,
@@ -29,11 +29,11 @@ fn main() {
             do_hext(&raw);
         }
     }
- }
+}
 
- fn do_hext(raw: &str) {
+fn do_hext(raw: &str) {
     match hext::to_bytes(raw) {
         Ok(bytes) => io::stdout().write_all(&bytes).unwrap(),
-        Err(e) => eprintln!("hext: {}", e)
+        Err(e) => eprintln!("hext: {}", e),
     }
- }
+}

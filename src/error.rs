@@ -4,7 +4,7 @@ use std::fmt;
 #[derive(Debug, PartialEq)]
 pub enum Error {
     IncompleteOctet,
-    InvalidCharacter(char)
+    InvalidCharacter(char),
 }
 
 impl ErrorTrait for Error {
@@ -17,7 +17,7 @@ impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Error::IncompleteOctet => write!(f, "Octet was not complete"),
-            Error::InvalidCharacter(c) => write!(f, "'{}' is not valid base16", c)
+            Error::InvalidCharacter(c) => write!(f, "'{}' is not valid base16", c),
         }
     }
 }
