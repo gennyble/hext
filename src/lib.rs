@@ -219,9 +219,9 @@ mod test {
     #[test]
     fn test_1bit() {
         let test = ".1";
-        let cmp = Error::IncompleteOctet;
+        let cmp = vec![0x01];
 
-        assert_eq!(to_bytes(&test, Options::default()).unwrap_err(), cmp);
+        assert_eq!(to_bytes(&test, Options { allow_incomplete_octets: true } ).unwrap(), cmp);
     }
 
     #[test]
@@ -251,23 +251,39 @@ mod test {
     #[test]
     fn test_1bit_then_byte() {
         let test = ".1 41";
-        let cmp = Error::IncompleteOctet;
+        let cmp = vec![0x01, 0x41];
 
-        assert_eq!(to_bytes(&test, Options::default()).unwrap_err(), cmp);
+        assert_eq!(to_bytes(&test, Options { allow_incomplete_octets: true }).unwrap(), cmp);
     }
 
     //## Failing Tests ##
     #[test]
-    fn test_incompleteoctet() {
+    fn ftest_incompleteoctet() {
         let test = "4";
 
         assert_eq!(to_bytes(&test, Options::default()).unwrap_err(), Error::IncompleteOctet);
     }
 
     #[test]
-    fn test_invalidcharacter() {
+    fn ftest_invalidcharacter() {
         let test = "G";
 
         assert_eq!(to_bytes(&test, Options::default()).unwrap_err(), Error::InvalidCharacter('G'));
+    }
+
+    #[test]
+    fn ftest_unaligned_bit() {
+        let test = ".1";
+        let cmp = Error::IncompleteOctet;
+
+        assert_eq!(to_bytes(&test, Options::default()).unwrap_err(), cmp);
+    }
+
+    #[test]
+    fn ftest_unaligned_bit_then_byte() {
+        let test = ".1 41";
+        let cmp = Error::IncompleteOctet;
+
+        assert_eq!(to_bytes(&test, Options::default()).unwrap_err(), cmp);
     }
 }
