@@ -1,0 +1,14 @@
+[package]
+name = "hxt"
+version = "0.1.0"
+authors = ["genuinebyte <brad@genbyte.dev>"]
+edition = "2018"
+description = "A binary file forming tool"
+repository = "https://github.com/genuinebyte/hext"
+license = "ISC"
+keywords = ["binary", "hexadecimal", "cli"]
+categories = ["command-line-utilities"]
+
+[dependencies]
+hext = { path = "../" }
+getopts = "0.2"

@@ -2,7 +2,7 @@ mod error;
 
 use std::str::Chars;
 use std::iter::Peekable;
-use crate::error::Error;
+pub use crate::error::Error;
 use bitvec::prelude::*;
 
 pub struct Options {
@@ -135,7 +135,7 @@ fn parse_bits(chars: &mut Peekable<Chars>) -> Option<Result<BitVec<Msb0, u8>, Er
 
 fn pad_bitvec(bv: &mut BitVec<Msb0, u8>) {
     while bv.len() % 8 != 0 {
-        bv.push(false);
+        bv.insert(0, false);
     }
 }
 
@@ -217,6 +217,14 @@ mod test {
     }
 
     #[test]
+    fn test_1bit() {
+        let test = ".1";
+        let cmp = vec![0x01];
+
+        assert_eq!(to_bytes(&test, &Options { allow_unaligned_bits: true } ).unwrap(), cmp);
+    }
+
+    #[test]
     fn test_8bits_halved_space() {
         let test_space = ".0100 .0010";
         let cmp = vec![0x42];
@@ -241,17 +249,9 @@ mod test {
     }
 
     #[test]
-    fn test_1bit() {
-        let test = ".1";
-        let cmp = vec![0b1000_0000];
-
-        assert_eq!(to_bytes(&test, &Options { allow_unaligned_bits: true } ).unwrap(), cmp);
-    }
-
-    #[test]
     fn test_1bit_then_byte() {
         let test = ".1 41";
-        let cmp = vec![0b1000_0000, 0x41];
+        let cmp = vec![0x01, 0x41];
 
         assert_eq!(to_bytes(&test, &Options { allow_unaligned_bits: true }).unwrap(), cmp);
     }

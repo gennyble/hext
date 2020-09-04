@@ -1,8 +1,13 @@
 [package]
 name = "hext"
-version = "0.1.0"
-authors = ["genuinebyte <bja@genuinebyte.com>"]
+version = "0.2.0"
+authors = ["genuinebyte <brad@genbyte.dev>"]
 edition = "2018"
+description = "A binary file forming format"
+repository = "https://github.com/genuinebyte/hext"
+license = "ISC"
+keywords = ["binary", "hexadecimal"]
+categories = ["encoding", "parsing"]
 
 [dependencies]
 bitvec = "0.17.2"
