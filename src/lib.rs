@@ -17,7 +17,7 @@ impl Options {
     }
 }
 
-pub fn to_bytes(raw: &str, options: Options) -> Result<Vec<u8>, Error> {
+pub fn to_bytes(raw: &str, options: &Options) -> Result<Vec<u8>, Error> {
     let mut ret: Vec<u8> = vec![];
     let mut bitopt: Option<BitVec<Msb0, u8>> = None;
 
@@ -149,14 +149,14 @@ mod test {
         let test = "41";
         let cmp = vec![0x41];
 
-        assert_eq!(to_bytes(&test, Options::default()).unwrap(), cmp);
+        assert_eq!(to_bytes(&test, &Options::default()).unwrap(), cmp);
     }
 
     #[test]
     fn test_only_comment() {
         let test = "# Comment";
 
-        assert_eq!(to_bytes(&test, Options::default()).unwrap(), vec![]);
+        assert_eq!(to_bytes(&test, &Options::default()).unwrap(), vec![]);
     }
 
     #[test]
@@ -164,7 +164,7 @@ mod test {
         let test = "41 #A";
         let cmp = vec![0x41];
 
-        assert_eq!(to_bytes(&test, Options::default()).unwrap(), cmp);
+        assert_eq!(to_bytes(&test, &Options::default()).unwrap(), cmp);
     }
 
     #[test]
@@ -172,7 +172,7 @@ mod test {
         let test = "41#A";
         let cmp = vec![0x41];
 
-        assert_eq!(to_bytes(&test, Options::default()).unwrap(), cmp);
+        assert_eq!(to_bytes(&test, &Options::default()).unwrap(), cmp);
     }
 
     #[test]
@@ -180,7 +180,7 @@ mod test {
         let test = "41\n42";
         let cmp = vec![0x41, 0x42];
 
-        assert_eq!(to_bytes(&test, Options::default()).unwrap(), cmp);
+        assert_eq!(to_bytes(&test, &Options::default()).unwrap(), cmp);
     }
 
     #[test]
@@ -188,7 +188,7 @@ mod test {
         let test = "4142";
         let cmp = vec![0x41, 0x42];
 
-        assert_eq!(to_bytes(&test, Options::default()).unwrap(), cmp);
+        assert_eq!(to_bytes(&test, &Options::default()).unwrap(), cmp);
     }
 
     //## Bit Tests ##
@@ -197,7 +197,7 @@ mod test {
         let test = ".01000001";
         let cmp = vec![0x41];
 
-        assert_eq!(to_bytes(&test, Options::default()).unwrap(), cmp);
+        assert_eq!(to_bytes(&test, &Options::default()).unwrap(), cmp);
     }
 
     #[test]
@@ -205,7 +205,7 @@ mod test {
         let test = ".01000001 # A";
         let cmp = vec![0x41];
 
-        assert_eq!(to_bytes(&test, Options::default()).unwrap(), cmp)
+        assert_eq!(to_bytes(&test, &Options::default()).unwrap(), cmp)
     }
 
     #[test]
@@ -213,7 +213,7 @@ mod test {
         let test = ".01000001#A";
         let cmp = vec![0x41];
 
-        assert_eq!(to_bytes(&test, Options::default()).unwrap(), cmp);
+        assert_eq!(to_bytes(&test, &Options::default()).unwrap(), cmp);
     }
 
     #[test]
@@ -221,7 +221,7 @@ mod test {
         let test = ".1";
         let cmp = vec![0x01];
 
-        assert_eq!(to_bytes(&test, Options { allow_unaligned_bits: true } ).unwrap(), cmp);
+        assert_eq!(to_bytes(&test, &Options { allow_unaligned_bits: true } ).unwrap(), cmp);
     }
 
     #[test]
@@ -229,7 +229,7 @@ mod test {
         let test_space = ".0100 .0010";
         let cmp = vec![0x42];
 
-        assert_eq!(to_bytes(&test_space, Options::default()).unwrap(), cmp);
+        assert_eq!(to_bytes(&test_space, &Options::default()).unwrap(), cmp);
     }
 
     #[test]
@@ -237,7 +237,7 @@ mod test {
         let test_line= ".0100\n.0010";
         let cmp = vec![0x42];
 
-        assert_eq!(to_bytes(&test_line, Options::default()).unwrap(), cmp);
+        assert_eq!(to_bytes(&test_line, &Options::default()).unwrap(), cmp);
     }
 
     #[test]
@@ -245,7 +245,7 @@ mod test {
         let test_line_comments = ".0100#Half of capital letter\n.0010 # B";
         let cmp = vec![0x42];
 
-        assert_eq!(to_bytes(&test_line_comments, Options::default()).unwrap(), cmp);
+        assert_eq!(to_bytes(&test_line_comments, &Options::default()).unwrap(), cmp);
     }
 
     #[test]
@@ -253,7 +253,7 @@ mod test {
         let test = ".1 41";
         let cmp = vec![0x01, 0x41];
 
-        assert_eq!(to_bytes(&test, Options { allow_unaligned_bits: true }).unwrap(), cmp);
+        assert_eq!(to_bytes(&test, &Options { allow_unaligned_bits: true }).unwrap(), cmp);
     }
 
     //## Failing Tests ##
@@ -261,14 +261,14 @@ mod test {
     fn ftest_incompleteoctet() {
         let test = "4";
 
-        assert_eq!(to_bytes(&test, Options::default()).unwrap_err(), Error::IncompleteOctet);
+        assert_eq!(to_bytes(&test, &Options::default()).unwrap_err(), Error::IncompleteOctet);
     }
 
     #[test]
     fn ftest_invalidcharacter() {
         let test = "G";
 
-        assert_eq!(to_bytes(&test, Options::default()).unwrap_err(), Error::InvalidCharacter('G'));
+        assert_eq!(to_bytes(&test, &Options::default()).unwrap_err(), Error::InvalidCharacter('G'));
     }
 
     #[test]
@@ -276,7 +276,7 @@ mod test {
         let test = ".1";
         let cmp = Error::UnalignedBits;
 
-        assert_eq!(to_bytes(&test, Options::default()).unwrap_err(), cmp);
+        assert_eq!(to_bytes(&test, &Options::default()).unwrap_err(), cmp);
     }
 
     #[test]
@@ -284,6 +284,6 @@ mod test {
         let test = ".1 41";
         let cmp = Error::UnalignedBits;
 
-        assert_eq!(to_bytes(&test, Options::default()).unwrap_err(), cmp);
+        assert_eq!(to_bytes(&test, &Options::default()).unwrap_err(), cmp);
     }
 }
