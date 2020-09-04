@@ -1,4 +1,5 @@
 use hext;
+use hext::Options;
 use std::env;
 use std::fs;
 use std::fs::File;
@@ -32,7 +33,7 @@ fn main() {
 }
 
 fn do_hext(raw: &str) {
-    match hext::to_bytes(raw) {
+    match hext::to_bytes(raw, Options::default()) {
         Ok(bytes) => io::stdout().write_all(&bytes).unwrap(),
         Err(e) => eprintln!("hext: {}", e),
     }

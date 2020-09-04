@@ -5,7 +5,19 @@ use std::iter::Peekable;
 use crate::error::Error;
 use bitvec::prelude::*;
 
-pub fn to_bytes(raw: &str) -> Result<Vec<u8>, Error> {
+pub struct Options {
+    pub allow_incomplete_octets: bool
+}
+
+impl Options {
+    pub fn default() -> Options {
+        Options {
+            allow_incomplete_octets: false
+        }
+    }
+}
+
+pub fn to_bytes(raw: &str, options: Options) -> Result<Vec<u8>, Error> {
     let mut ret: Vec<u8> = vec![];
     let mut bitopt: Option<BitVec<Msb0, u8>> = None;
 
@@ -17,10 +29,16 @@ pub fn to_bytes(raw: &str) -> Result<Vec<u8>, Error> {
                 chars.find(|&c| c == '\n');
                 continue;
             },
-            Some(c) => (),
+            Some(_c) => (), 
             None => {
                 if bitopt.is_some() {
                     let mut bitvec = bitopt.take().unwrap();
+
+                    if !options.allow_incomplete_octets && bitvec.len() % 8 != 0{
+                        // If the options disallow incommplete octets, and we have one, return an error
+                        return Err(Error::IncompleteOctet);
+                    }
+
                     pad_bitvec(&mut bitvec);
                     ret.append(&mut bitvec.into_vec());
                 }
@@ -39,6 +57,12 @@ pub fn to_bytes(raw: &str) -> Result<Vec<u8>, Error> {
             Some(Ok(byte)) => {
                 if bitopt.is_some() {
                     let mut bitvec = bitopt.take().unwrap();
+
+                    if !options.allow_incomplete_octets && bitvec.len() % 8 != 0{
+                        // If the options disallow incommplete octets, and we have one, return an error
+                        return Err(Error::IncompleteOctet);
+                    }
+
                     pad_bitvec(&mut bitvec);
                     ret.append(&mut bitvec.into_vec());
                 }
@@ -125,14 +149,14 @@ mod test {
         let test = "41";
         let cmp = vec![0x41];
 
-        assert_eq!(to_bytes(&test).unwrap(), cmp);
+        assert_eq!(to_bytes(&test, Options::default()).unwrap(), cmp);
     }
 
     #[test]
     fn test_only_comment() {
         let test = "# Comment";
 
-        assert_eq!(to_bytes(&test).unwrap(), vec![]);
+        assert_eq!(to_bytes(&test, Options::default()).unwrap(), vec![]);
     }
 
     #[test]
@@ -140,7 +164,7 @@ mod test {
         let test = "41 #A";
         let cmp = vec![0x41];
 
-        assert_eq!(to_bytes(&test).unwrap(), cmp);
+        assert_eq!(to_bytes(&test, Options::default()).unwrap(), cmp);
     }
 
     #[test]
@@ -148,7 +172,7 @@ mod test {
         let test = "41#A";
         let cmp = vec![0x41];
 
-        assert_eq!(to_bytes(&test).unwrap(), cmp);
+        assert_eq!(to_bytes(&test, Options::default()).unwrap(), cmp);
     }
 
     #[test]
@@ -156,7 +180,7 @@ mod test {
         let test = "41\n42";
         let cmp = vec![0x41, 0x42];
 
-        assert_eq!(to_bytes(&test).unwrap(), cmp);
+        assert_eq!(to_bytes(&test, Options::default()).unwrap(), cmp);
     }
 
     #[test]
@@ -164,16 +188,16 @@ mod test {
         let test = "4142";
         let cmp = vec![0x41, 0x42];
 
-        assert_eq!(to_bytes(&test).unwrap(), cmp);
+        assert_eq!(to_bytes(&test, Options::default()).unwrap(), cmp);
     }
 
-    //## Bit Tests##
+    //## Bit Tests ##
     #[test]
     fn test_8bits() {
         let test = ".01000001";
         let cmp = vec![0x41];
 
-        assert_eq!(to_bytes(&test).unwrap(), cmp);
+        assert_eq!(to_bytes(&test, Options::default()).unwrap(), cmp);
     }
 
     #[test]
@@ -181,7 +205,7 @@ mod test {
         let test = ".01000001 # A";
         let cmp = vec![0x41];
 
-        assert_eq!(to_bytes(&test).unwrap(), cmp)
+        assert_eq!(to_bytes(&test, Options::default()).unwrap(), cmp)
     }
 
     #[test]
@@ -189,15 +213,15 @@ mod test {
         let test = ".01000001#A";
         let cmp = vec![0x41];
 
-        assert_eq!(to_bytes(&test).unwrap(), cmp);
+        assert_eq!(to_bytes(&test, Options::default()).unwrap(), cmp);
     }
 
     #[test]
     fn test_1bit() {
         let test = ".1";
-        let cmp = vec![0x01];
+        let cmp = Error::IncompleteOctet;
 
-        assert_eq!(to_bytes(&test).unwrap(), cmp);
+        assert_eq!(to_bytes(&test, Options::default()).unwrap_err(), cmp);
     }
 
     #[test]
@@ -205,7 +229,7 @@ mod test {
         let test_space = ".0100 .0010";
         let cmp = vec![0x42];
 
-        assert_eq!(to_bytes(&test_space).unwrap(), cmp);
+        assert_eq!(to_bytes(&test_space, Options::default()).unwrap(), cmp);
     }
 
     #[test]
@@ -213,7 +237,7 @@ mod test {
         let test_line= ".0100\n.0010";
         let cmp = vec![0x42];
 
-        assert_eq!(to_bytes(&test_line).unwrap(), cmp);
+        assert_eq!(to_bytes(&test_line, Options::default()).unwrap(), cmp);
     }
 
     #[test]
@@ -221,29 +245,29 @@ mod test {
         let test_line_comments = ".0100#Half of capital letter\n.0010 # B";
         let cmp = vec![0x42];
 
-        assert_eq!(to_bytes(&test_line_comments).unwrap(), cmp);
+        assert_eq!(to_bytes(&test_line_comments, Options::default()).unwrap(), cmp);
     }
 
     #[test]
     fn test_1bit_then_byte() {
         let test = ".1 41";
-        let cmp = vec![0x01, 0x41];
+        let cmp = Error::IncompleteOctet;
 
-        assert_eq!(to_bytes(&test).unwrap(), cmp);
+        assert_eq!(to_bytes(&test, Options::default()).unwrap_err(), cmp);
     }
 
-    //## Failing Tests##
+    //## Failing Tests ##
     #[test]
     fn test_incompleteoctet() {
         let test = "4";
 
-        assert_eq!(to_bytes(&test).unwrap_err(), Error::IncompleteOctet);
+        assert_eq!(to_bytes(&test, Options::default()).unwrap_err(), Error::IncompleteOctet);
     }
 
     #[test]
     fn test_invalidcharacter() {
         let test = "G";
 
-        assert_eq!(to_bytes(&test).unwrap_err(), Error::InvalidCharacter('G'));
+        assert_eq!(to_bytes(&test, Options::default()).unwrap_err(), Error::InvalidCharacter('G'));
     }
 }
