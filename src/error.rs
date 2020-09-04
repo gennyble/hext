@@ -5,6 +5,7 @@ use std::fmt;
 pub enum Error {
     IncompleteOctet,
     InvalidCharacter(char),
+    UnalignedBits
 }
 
 impl ErrorTrait for Error {
@@ -18,6 +19,7 @@ impl fmt::Display for Error {
         match self {
             Error::IncompleteOctet => write!(f, "Octet was not complete"),
             Error::InvalidCharacter(c) => write!(f, "'{}' is not valid base16", c),
+            Error::UnalignedBits => write!(f, "Not enough bits to form an octet")
         }
     }
 }

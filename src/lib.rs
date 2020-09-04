@@ -6,13 +6,13 @@ use crate::error::Error;
 use bitvec::prelude::*;
 
 pub struct Options {
-    pub allow_incomplete_octets: bool
+    pub allow_unaligned_bits: bool
 }
 
 impl Options {
     pub fn default() -> Options {
         Options {
-            allow_incomplete_octets: false
+            allow_unaligned_bits: false
         }
     }
 }
@@ -34,9 +34,9 @@ pub fn to_bytes(raw: &str, options: Options) -> Result<Vec<u8>, Error> {
                 if bitopt.is_some() {
                     let mut bitvec = bitopt.take().unwrap();
 
-                    if !options.allow_incomplete_octets && bitvec.len() % 8 != 0{
-                        // If the options disallow incommplete octets, and we have one, return an error
-                        return Err(Error::IncompleteOctet);
+                    if !options.allow_unaligned_bits && bitvec.len() % 8 != 0{
+                        // If the options disallow unaligned bits, and we have one, return an error
+                        return Err(Error::UnalignedBits);
                     }
 
                     pad_bitvec(&mut bitvec);
@@ -58,9 +58,9 @@ pub fn to_bytes(raw: &str, options: Options) -> Result<Vec<u8>, Error> {
                 if bitopt.is_some() {
                     let mut bitvec = bitopt.take().unwrap();
 
-                    if !options.allow_incomplete_octets && bitvec.len() % 8 != 0{
-                        // If the options disallow incommplete octets, and we have one, return an error
-                        return Err(Error::IncompleteOctet);
+                    if !options.allow_unaligned_bits && bitvec.len() % 8 != 0{
+                        // If the options disallow unaligned bits, and we have one, return an error
+                        return Err(Error::UnalignedBits);
                     }
 
                     pad_bitvec(&mut bitvec);
@@ -221,7 +221,7 @@ mod test {
         let test = ".1";
         let cmp = vec![0x01];
 
-        assert_eq!(to_bytes(&test, Options { allow_incomplete_octets: true } ).unwrap(), cmp);
+        assert_eq!(to_bytes(&test, Options { allow_unaligned_bits: true } ).unwrap(), cmp);
     }
 
     #[test]
@@ -253,7 +253,7 @@ mod test {
         let test = ".1 41";
         let cmp = vec![0x01, 0x41];
 
-        assert_eq!(to_bytes(&test, Options { allow_incomplete_octets: true }).unwrap(), cmp);
+        assert_eq!(to_bytes(&test, Options { allow_unaligned_bits: true }).unwrap(), cmp);
     }
 
     //## Failing Tests ##
@@ -274,7 +274,7 @@ mod test {
     #[test]
     fn ftest_unaligned_bit() {
         let test = ".1";
-        let cmp = Error::IncompleteOctet;
+        let cmp = Error::UnalignedBits;
 
         assert_eq!(to_bytes(&test, Options::default()).unwrap_err(), cmp);
     }
@@ -282,7 +282,7 @@ mod test {
     #[test]
     fn ftest_unaligned_bit_then_byte() {
         let test = ".1 41";
-        let cmp = Error::IncompleteOctet;
+        let cmp = Error::UnalignedBits;
 
         assert_eq!(to_bytes(&test, Options::default()).unwrap_err(), cmp);
     }
