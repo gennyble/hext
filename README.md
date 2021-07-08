@@ -6,6 +6,12 @@ Write those packets in hext! hext (`*.hxt`) is a file format for writing small
 (or large, if you dare) binary files with comments. You can switch between hex,
 binary, and decimal and even stick some string literals in there.
 
+The CLI tool is called `hxt` and it can be found [here](https://crates.io/crates/hxt).
+To install it, run
+```
+cargo install hxt
+```
+
 This is what a small GIF looks like:
 ```
 ~little-endian msb0
