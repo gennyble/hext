@@ -94,7 +94,7 @@ impl Hext {
 							None => return Err(Error::IncompleteOctet),
 						}
 					}
-					Some('\'') => state = State::ReadingLiteral,
+					Some('\"') => state = State::ReadingLiteral,
 					Some(c) => return Err(Error::InvalidCharacter(c)),
 
 					None => match chars.peek() {
@@ -105,7 +105,7 @@ impl Hext {
 				},
 
 				State::ReadingLiteral => match chars.next() {
-					Some('\'') => state = State::ReadingHex,
+					Some('\"') => state = State::ReadingHex,
 					Some('\\') => match chars.next() {
 						Some(c) => match Self::escape(c) {
 							Some(c) => self.parsed.push(c as u8),
@@ -210,7 +210,7 @@ impl Hext {
 
 	fn escape(c: char) -> Option<char> {
 		match c {
-			'\'' => Some('\''),
+			'\"' => Some('\"'),
 			'\\' => Some('\\'),
 			'n' => Some('\n'),
 			'r' => Some('\r'),
@@ -446,7 +446,7 @@ mod test {
 	//## Literal Tests ##
 	#[test]
 	fn literal_multibyte() {
-		let test = "~big-endian lsb0\n'🥺'";
+		let test = "~big-endian lsb0\n\"🥺\"";
 		let cmp = vec![0xf0, 0x9f, 0xa5, 0xba];
 
 		assert_eq!(Hext::new().parse(&test).unwrap(), cmp);

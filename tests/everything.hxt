@@ -7,5 +7,5 @@
 0A           # Lone byte LF
 
 # Literals
-'ASDF'         # Quoted string
-'QWERTY\nASDF' # Quoted string with escapes
+"ASDF"         # Quoted string
+"QWERTY\nASDF" # Quoted string with escapes
