@@ -20,34 +20,10 @@ enum BitOrder {
 	Lsb0,
 }
 
-impl BitOrder {
-	fn from_str<S: AsRef<str>>(s: S) -> Option<Self> {
-		if s.as_ref() == "msb0" {
-			Some(BitOrder::Msb0)
-		} else if s.as_ref() == "lsb0" {
-			Some(BitOrder::Lsb0)
-		} else {
-			None
-		}
-	}
-}
-
 #[derive(Debug, PartialEq)]
 enum ByteOrder {
 	LittleEndian,
 	BigEndian,
-}
-
-impl ByteOrder {
-	fn from_str<S: AsRef<str>>(s: S) -> Option<Self> {
-		if s.as_ref() == "big-endian" {
-			Some(ByteOrder::BigEndian)
-		} else if s.as_ref() == "little-endian" {
-			Some(ByteOrder::LittleEndian)
-		} else {
-			None
-		}
-	}
 }
 
 pub struct Hext {

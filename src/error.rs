@@ -1,6 +1,5 @@
 use std::error::Error as ErrorTrait;
 use std::fmt;
-use std::num::ParseIntError;
 
 #[derive(Debug, PartialEq)]
 pub enum Error {
