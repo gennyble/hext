@@ -6,7 +6,7 @@ Write those packets in hext! hext (`*.hxt`) is a file format for writing small
 (or large, if you dare) binary files with ease. Just gaze at the beauty below.
 
 ```
-515745525459 # `QWERTY`, the most uesd keyboard layout
+515745525459 # `QWERTY`, the most used keyboard layout
 10 13        # Linefeed (LF) and Carriage Return (CF)
 .01000001    # The letter A, in Binary, just to demonstrate how binary can be used
 .0100 .0010  # B. Binary doesn't need to be grouped in octets
