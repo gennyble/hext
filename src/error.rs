@@ -3,9 +3,14 @@ use std::fmt;
 
 #[derive(Debug, PartialEq)]
 pub enum Error {
-    IncompleteOctet,
+    NoHeader,
+    InvalidHeader(InvalidHeaderKind),
     InvalidCharacter(char),
-    UnalignedBits
+    InvalidEscape(char),
+    UnclosedStringLiteral,
+    IncompleteOctet,
+    GarbageCharacterInBitstream,
+    UnalignedBits,
 }
 
 impl ErrorTrait for Error {
@@ -17,9 +22,53 @@ impl ErrorTrait for Error {
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Error::IncompleteOctet => write!(f, "Octet was not complete"),
+            Error::NoHeader => write!(f, "The file must start with a header"),
+            Error::InvalidHeader(kind) => write!(f, "{}", kind),
             Error::InvalidCharacter(c) => write!(f, "'{}' is not valid base16", c),
-            Error::UnalignedBits => write!(f, "Not enough bits to form an octet")
+            Error::InvalidEscape(c) => write!(f, "\\{} is not a valid escape code", c),
+            Error::UnclosedStringLiteral => {
+                write!(
+                    f,
+                    "The line or file ended in an unterminated string literal"
+                )
+            }
+            Error::IncompleteOctet => write!(f, "Octet was not complete"),
+            Error::GarbageCharacterInBitstream => write!(
+                f,
+                "Periods to indicate binary data must be directly followed by that data"
+            ),
+            Error::UnalignedBits => write!(f, "Not enough bits to form an octet"),
         }
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub enum InvalidHeaderKind {
+    TwoBitOrder,
+    TwoByteOrder,
+    NoBitOrder,
+    NoByteOrder,
+    InvalidProperty(String),
+}
+
+impl fmt::Display for InvalidHeaderKind {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            InvalidHeaderKind::TwoBitOrder => write!(f, "You may only specify the bit order once"),
+            InvalidHeaderKind::TwoByteOrder => {
+                write!(f, "You may only specify the byte order once")
+            }
+            InvalidHeaderKind::NoBitOrder => write!(f, "You must specify a bit order"),
+            InvalidHeaderKind::NoByteOrder => write!(f, "You must specify a byte order"),
+            InvalidHeaderKind::InvalidProperty(property) => {
+                write!(f, "'{}' is not a valid file property", property)
+            }
+        }
+    }
+}
+
+impl Into<Error> for InvalidHeaderKind {
+    fn into(self) -> Error {
+        Error::InvalidHeader(self)
     }
 }

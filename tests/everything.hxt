@@ -1,0 +1,11 @@
+~big-endian lsb0
+
+515745525459 # Packed 'QWERTY' as hex
+0D 0A        # Separate CR/LF
+.01000001    # Binary A
+.0100 .0010  # Non-octet Binary B
+0A           # Lone byte LF
+
+# Some New Shit
+'ASDF'         # Quoted string
+'QWERTY\nASDF' # Quoted string with escapes
