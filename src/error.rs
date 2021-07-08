@@ -10,6 +10,9 @@ pub enum Error {
 	IncompleteOctet,
 
 	InvalidDecimal(String),
+	InvalidSignedDecimal(String),
+	InvalidUnsignedDecimal(String),
+	InvalidBitness(String),
 
 	InvalidCharacter(char),
 
@@ -47,6 +50,17 @@ impl fmt::Display for Error {
 			),
 			Error::UnalignedBits => write!(f, "Not enough bits to form an octet"),
 			Error::InvalidDecimal(string) => write!(f, "'{}' is not valid decimal", string),
+			Error::InvalidSignedDecimal(value) => {
+				write!(f, "'{}' is not valid signed decimal", value)
+			}
+			Error::InvalidUnsignedDecimal(value) => {
+				write!(f, "'{}' is not valid unsigned decimal", value)
+			}
+			Error::InvalidBitness(bitness) => write!(
+				f,
+				"'{}' is not a valid width. Valid widths are 8, 16, 32, and 64",
+				bitness
+			),
 		}
 	}
 }

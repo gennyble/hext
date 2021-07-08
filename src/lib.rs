@@ -96,7 +96,9 @@ impl Hext {
 						}
 					}
 
-					Some('=') => state = State::ReadingDecimal,
+					Some('=') => state = State::ReadingUnsizedDecimal,
+					Some('i') => state = State::ReadingSignedDecimal,
+					Some('u') => state = State::ReadingUnsignedDecimal,
 					Some('\"') => state = State::ReadingLiteral,
 					Some(c) => return Err(Error::InvalidCharacter(c)),
 
@@ -107,7 +109,7 @@ impl Hext {
 					},
 				},
 
-				State::ReadingDecimal => {
+				State::ReadingUnsizedDecimal => {
 					let decimal = Self::consume_until_whitespace(&mut chars);
 					state = State::ReadingHex;
 
@@ -131,6 +133,44 @@ impl Hext {
 					}
 
 					self.parsed.extend_from_slice(&bytes);
+				}
+
+				State::ReadingSignedDecimal => {
+					let signed_decimal_string = Self::consume_until_whitespace(&mut chars);
+					state = State::ReadingHex;
+
+					let splits = signed_decimal_string.split_once('=');
+					match splits {
+						Some((bitness, value)) => {
+							let mut bytes = Self::signed_le_bytes(bitness, value)?;
+
+							if header.byteorder == ByteOrder::BigEndian {
+								bytes.reverse();
+							}
+
+							self.parsed.extend_from_slice(&bytes);
+						}
+						None => return Err(Error::InvalidSignedDecimal(signed_decimal_string)),
+					}
+				}
+
+				State::ReadingUnsignedDecimal => {
+					let signed_decimal_string = Self::consume_until_whitespace(&mut chars);
+					state = State::ReadingHex;
+
+					let splits = signed_decimal_string.split_once('=');
+					match splits {
+						Some((bitness, value)) => {
+							let mut bytes = Self::unsigned_le_bytes(bitness, value)?;
+
+							if header.byteorder == ByteOrder::BigEndian {
+								bytes.reverse();
+							}
+
+							self.parsed.extend_from_slice(&bytes);
+						}
+						None => return Err(Error::InvalidDecimal(signed_decimal_string)),
+					}
 				}
 
 				State::ReadingLiteral => match chars.next() {
@@ -272,6 +312,28 @@ impl Hext {
 		chars.take_while(|&c| !c.is_whitespace()).collect()
 	}
 
+	fn signed_le_bytes<S: AsRef<str>>(bitness: S, value: S) -> Result<Vec<u8>, Error> {
+		match bitness.as_ref() {
+			"8" => Ok(i8::from_str_radix(value.as_ref(), 10)
+				.map_err(|_| Error::InvalidSignedDecimal(value.as_ref().to_string()))?
+				.to_le_bytes()
+				.to_vec()),
+			"16" => Ok(i16::from_str_radix(value.as_ref(), 10)
+				.map_err(|_| Error::InvalidSignedDecimal(value.as_ref().to_string()))?
+				.to_le_bytes()
+				.to_vec()),
+			"32" => Ok(i32::from_str_radix(value.as_ref(), 10)
+				.map_err(|_| Error::InvalidSignedDecimal(value.as_ref().to_string()))?
+				.to_le_bytes()
+				.to_vec()),
+			"64" => Ok(i64::from_str_radix(value.as_ref(), 10)
+				.map_err(|_| Error::InvalidSignedDecimal(value.as_ref().to_string()))?
+				.to_le_bytes()
+				.to_vec()),
+			_ => return Err(Error::InvalidBitness(bitness.as_ref().to_string())),
+		}
+	}
+
 	fn signed_smallest_le_bytes<S: AsRef<str>>(string: S) -> Result<Vec<u8>, ParseIntError> {
 		let large: i64 = i64::from_str_radix(string.as_ref(), 10)?;
 
@@ -284,6 +346,28 @@ impl Hext {
 		} else {
 			(large as i8).to_le_bytes().to_vec()
 		})
+	}
+
+	fn unsigned_le_bytes<S: AsRef<str>>(bitness: S, value: S) -> Result<Vec<u8>, Error> {
+		match bitness.as_ref() {
+			"8" => Ok(u8::from_str_radix(value.as_ref(), 10)
+				.map_err(|_| Error::InvalidUnsignedDecimal(value.as_ref().to_string()))?
+				.to_le_bytes()
+				.to_vec()),
+			"16" => Ok(u16::from_str_radix(value.as_ref(), 10)
+				.map_err(|_| Error::InvalidUnsignedDecimal(value.as_ref().to_string()))?
+				.to_le_bytes()
+				.to_vec()),
+			"32" => Ok(u32::from_str_radix(value.as_ref(), 10)
+				.map_err(|_| Error::InvalidUnsignedDecimal(value.as_ref().to_string()))?
+				.to_le_bytes()
+				.to_vec()),
+			"64" => Ok(u64::from_str_radix(value.as_ref(), 10)
+				.map_err(|_| Error::InvalidUnsignedDecimal(value.as_ref().to_string()))?
+				.to_le_bytes()
+				.to_vec()),
+			_ => return Err(Error::InvalidBitness(bitness.as_ref().to_string())),
+		}
 	}
 
 	fn unsigned_smallest_le_bytes<S: AsRef<str>>(string: S) -> Result<Vec<u8>, ParseIntError> {
@@ -303,7 +387,9 @@ impl Hext {
 
 enum State {
 	ReadingHex,
-	ReadingDecimal,
+	ReadingUnsizedDecimal,
+	ReadingSignedDecimal,
+	ReadingUnsignedDecimal,
 	ReadingBinary,
 	ReadingLiteral,
 }
@@ -516,7 +602,7 @@ mod test {
 
 	//## Decimal Tests ##
 	#[test]
-	fn decimal_u8() {
+	fn decimal_unsized_u8() {
 		let test = "~big-endian lsb0\n=200";
 		let cmp = vec![200];
 
@@ -524,7 +610,7 @@ mod test {
 	}
 
 	#[test]
-	fn decimal_i8() {
+	fn decimal_unsized_i8() {
 		let test = "~big-endian lsb0\n=-127";
 		let cmp = (-127i8).to_be_bytes().to_vec();
 
@@ -532,7 +618,7 @@ mod test {
 	}
 
 	#[test]
-	fn decimal_u32() {
+	fn decimal_unsized_u32() {
 		let test = "~little-endian lsb0\n=65536";
 		let cmp = 65536u32.to_le_bytes().to_vec();
 
@@ -540,11 +626,29 @@ mod test {
 	}
 
 	#[test]
-	fn decimal_i32() {
+	fn decimal_unsized_i32() {
 		let test = "~little-endian lsb0\n=-40000";
 		let cmp = (-40000i32).to_le_bytes().to_vec();
 
 		assert_eq!(Hext::new().parse(&test).unwrap(), cmp);
+	}
+
+	#[test]
+	fn decimal_sized_u16() {
+		let test = "~little-endian lsb0\nu16=65534";
+		let cmp = 65534u16.to_le_bytes().to_vec();
+
+		assert_eq!(Hext::new().parse(&test).unwrap(), cmp);
+	}
+
+	#[test]
+	fn decimal_overflow_sized_u16() {
+		let test = "~little-endian lsb0\nu16=65536";
+
+		assert_eq!(
+			Hext::new().parse(&test).unwrap_err(),
+			Error::InvalidUnsignedDecimal("65536".into())
+		);
 	}
 
 	//## Everything ##
