@@ -6,6 +6,6 @@
 .0100 .0010  # Non-octet Binary B
 0A           # Lone byte LF
 
-# Some New Shit
+# Literals
 'ASDF'         # Quoted string
 'QWERTY\nASDF' # Quoted string with escapes
