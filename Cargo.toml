@@ -1,7 +1,7 @@
 [package]
 name = "hext"
-version = "0.3.0"
-authors = ["genuinebyte <brad@genbyte.dev>"]
+version = "0.4.0"
+authors = ["Brad Alfirevic <brad@genbyte.dev>"]
 edition = "2018"
 description = "A binary file markup language"
 repository = "https://github.com/genuinebyte/hext"
