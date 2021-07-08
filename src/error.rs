@@ -70,6 +70,8 @@ pub enum InvalidHeaderKind {
 	TwoByteOrder,
 	NoBitOrder,
 	NoByteOrder,
+
+	TwoNegativeKind,
 	InvalidProperty(String),
 }
 
@@ -82,6 +84,8 @@ impl fmt::Display for InvalidHeaderKind {
 			}
 			InvalidHeaderKind::NoBitOrder => write!(f, "You must specify a bit order"),
 			InvalidHeaderKind::NoByteOrder => write!(f, "You must specify a byte order"),
+
+			InvalidHeaderKind::TwoNegativeKind => write!(f, "You may only specify one negative"),
 			InvalidHeaderKind::InvalidProperty(property) => {
 				write!(f, "'{}' is not a valid file property", property)
 			}

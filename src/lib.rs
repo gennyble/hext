@@ -11,6 +11,7 @@ use std::str::Chars;
 struct Header {
 	bitorder: BitOrder,
 	byteorder: ByteOrder,
+	negativekind: NegativeKind,
 	pad_bits: bool,
 }
 
@@ -24,6 +25,13 @@ enum BitOrder {
 enum ByteOrder {
 	LittleEndian,
 	BigEndian,
+}
+
+#[derive(Debug, PartialEq)]
+enum NegativeKind {
+	TwosCompliment,
+	OnesCompliment,
+	SignMagnitude,
 }
 
 pub struct Hext {
@@ -211,6 +219,7 @@ impl Hext {
 
 		let mut bitorder = None;
 		let mut byteorder = None;
+		let mut negativekind = None;
 		let mut pad_bits = false;
 
 		for split in splits {
@@ -235,6 +244,21 @@ impl Hext {
 						return Err(InvalidHeaderKind::TwoByteOrder.into());
 					}
 				}
+				"twos-compliment" => {
+					if negativekind.replace(NegativeKind::TwosCompliment).is_none() {
+						return Err(InvalidHeaderKind::TwoNegativeKind.into());
+					}
+				}
+				"ones-compliment" => {
+					if negativekind.replace(NegativeKind::OnesCompliment).is_none() {
+						return Err(InvalidHeaderKind::TwoNegativeKind.into());
+					}
+				}
+				"sign-magnitude" => {
+					if negativekind.replace(NegativeKind::SignMagnitude).is_none() {
+						return Err(InvalidHeaderKind::TwoNegativeKind.into());
+					}
+				}
 				"padbits" => pad_bits = true,
 				_ => return Err(InvalidHeaderKind::InvalidProperty(split.into()).into()),
 			}
@@ -248,6 +272,7 @@ impl Hext {
 			Ok(Header {
 				bitorder: bitorder.unwrap(),
 				byteorder: byteorder.unwrap(),
+				negativekind: negativekind.unwrap_or(NegativeKind::TwosCompliment),
 				pad_bits,
 			})
 		}
@@ -382,6 +407,7 @@ mod test {
 			Header {
 				byteorder: ByteOrder::BigEndian,
 				bitorder: crate::BitOrder::Msb0,
+				negativekind: NegativeKind::TwosCompliment,
 				pad_bits: false
 			}
 		);
@@ -391,6 +417,7 @@ mod test {
 			Header {
 				byteorder: ByteOrder::LittleEndian,
 				bitorder: crate::BitOrder::Lsb0,
+				negativekind: NegativeKind::TwosCompliment,
 				pad_bits: false
 			}
 		);
@@ -401,6 +428,7 @@ mod test {
 			Header {
 				byteorder: ByteOrder::BigEndian,
 				bitorder: crate::BitOrder::Lsb0,
+				negativekind: NegativeKind::TwosCompliment,
 				pad_bits: false
 			}
 		);
