@@ -25,7 +25,7 @@ u16=4 u16=4 # Canvas width/height
 =255 =255 =255 # White 
 
 # Image Descriptor
-","         # Image Seperator
+","         # Image Separator
 u16=0 u16=0 # Image offset left/top
 u16=4 u16=4 # Image width/height
 .1          # Local Color Table Flag
