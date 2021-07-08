@@ -1,7 +1,7 @@
 ~little-endian msb0
 "GIF89a"    # File header and version string
 
-            # Logical Screen Descriptor
+# Logical Screen Descriptor
 u16=4 u16=4 # Canvas width/height
 .1          # Global Color Table Flag
 .000        # Color Resolution
