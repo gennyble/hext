@@ -1,15 +1,23 @@
 use std::error::Error as ErrorTrait;
 use std::fmt;
+use std::num::ParseIntError;
 
 #[derive(Debug, PartialEq)]
 pub enum Error {
 	NoHeader,
 	InvalidHeader(InvalidHeaderKind),
+
+	IncompleteOctet,
+
+	InvalidDecimal(String),
+
 	InvalidCharacter(char),
+
 	InvalidEscape(char),
 	UnclosedStringLiteral,
-	IncompleteOctet,
+
 	GarbageCharacterInBitstream,
+
 	UnalignedBits,
 }
 
@@ -38,6 +46,7 @@ impl fmt::Display for Error {
 				"Periods to indicate binary data must be directly followed by that data"
 			),
 			Error::UnalignedBits => write!(f, "Not enough bits to form an octet"),
+			Error::InvalidDecimal(string) => write!(f, "'{}' is not valid decimal", string),
 		}
 	}
 }

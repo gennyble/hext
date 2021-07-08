@@ -4,6 +4,7 @@ pub use crate::error::Error;
 use bitvec::prelude::*;
 use error::InvalidHeaderKind;
 use std::iter::Peekable;
+use std::num::ParseIntError;
 use std::str::Chars;
 
 #[derive(Debug, PartialEq)]
@@ -94,6 +95,8 @@ impl Hext {
 							None => return Err(Error::IncompleteOctet),
 						}
 					}
+
+					Some('=') => state = State::ReadingDecimal,
 					Some('\"') => state = State::ReadingLiteral,
 					Some(c) => return Err(Error::InvalidCharacter(c)),
 
@@ -103,6 +106,32 @@ impl Hext {
 						None => return Ok(self.parsed),
 					},
 				},
+
+				State::ReadingDecimal => {
+					let decimal = Self::consume_until_whitespace(&mut chars);
+					state = State::ReadingHex;
+
+					let is_signed = if let Some(sign) = decimal.chars().next() {
+						sign == '-' || sign == '+'
+					} else {
+						// it was a lone =. Send the maybe-decimal string even
+						// though we know it's empty
+						return Err(Error::InvalidDecimal(decimal));
+					};
+
+					let mut bytes = if is_signed {
+						Self::signed_smallest_le_bytes(&decimal)
+					} else {
+						Self::unsigned_smallest_le_bytes(&decimal)
+					}
+					.map_err(|_e| Error::InvalidDecimal(decimal))?;
+
+					if header.byteorder == ByteOrder::BigEndian {
+						bytes.reverse();
+					}
+
+					self.parsed.extend_from_slice(&bytes);
+				}
 
 				State::ReadingLiteral => match chars.next() {
 					Some('\"') => state = State::ReadingHex,
@@ -238,10 +267,43 @@ impl Hext {
 	fn consume_line(chars: &mut Peekable<Chars>) -> String {
 		chars.take_while(|&c| c != '\n').collect()
 	}
+
+	fn consume_until_whitespace(chars: &mut Peekable<Chars>) -> String {
+		chars.take_while(|&c| !c.is_whitespace()).collect()
+	}
+
+	fn signed_smallest_le_bytes<S: AsRef<str>>(string: S) -> Result<Vec<u8>, ParseIntError> {
+		let large: i64 = i64::from_str_radix(string.as_ref(), 10)?;
+
+		Ok(if large > i32::MAX as i64 || large < i32::MIN as i64 {
+			large.to_le_bytes().to_vec()
+		} else if large > i16::MAX as i64 || large < i16::MIN as i64 {
+			(large as i32).to_le_bytes().to_vec()
+		} else if large > i8::MAX as i64 || large < i8::MIN as i64 {
+			(large as i16).to_le_bytes().to_vec()
+		} else {
+			(large as i8).to_le_bytes().to_vec()
+		})
+	}
+
+	fn unsigned_smallest_le_bytes<S: AsRef<str>>(string: S) -> Result<Vec<u8>, ParseIntError> {
+		let large: u64 = u64::from_str_radix(string.as_ref(), 10)?;
+
+		Ok(if large > u32::MAX as u64 {
+			large.to_le_bytes().to_vec()
+		} else if large > u16::MAX as u64 {
+			(large as u32).to_le_bytes().to_vec()
+		} else if large > u8::MAX as u64 {
+			(large as u16).to_le_bytes().to_vec()
+		} else {
+			(large as u8).to_le_bytes().to_vec()
+		})
+	}
 }
 
 enum State {
 	ReadingHex,
+	ReadingDecimal,
 	ReadingBinary,
 	ReadingLiteral,
 }
@@ -448,6 +510,39 @@ mod test {
 	fn literal_multibyte() {
 		let test = "~big-endian lsb0\n\"🥺\"";
 		let cmp = vec![0xf0, 0x9f, 0xa5, 0xba];
+
+		assert_eq!(Hext::new().parse(&test).unwrap(), cmp);
+	}
+
+	//## Decimal Tests ##
+	#[test]
+	fn decimal_u8() {
+		let test = "~big-endian lsb0\n=200";
+		let cmp = vec![200];
+
+		assert_eq!(Hext::new().parse(&test).unwrap(), cmp);
+	}
+
+	#[test]
+	fn decimal_i8() {
+		let test = "~big-endian lsb0\n=-127";
+		let cmp = (-127i8).to_be_bytes().to_vec();
+
+		assert_eq!(Hext::new().parse(&test).unwrap(), cmp);
+	}
+
+	#[test]
+	fn decimal_u32() {
+		let test = "~little-endian lsb0\n=65536";
+		let cmp = 65536u32.to_le_bytes().to_vec();
+
+		assert_eq!(Hext::new().parse(&test).unwrap(), cmp);
+	}
+
+	#[test]
+	fn decimal_i32() {
+		let test = "~little-endian lsb0\n=-40000";
+		let cmp = (-40000i32).to_le_bytes().to_vec();
 
 		assert_eq!(Hext::new().parse(&test).unwrap(), cmp);
 	}
