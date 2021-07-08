@@ -3,8 +3,8 @@ Do you find yourself exploring file formats, such as GIF, and finding yourself
 annoyed with hex editors? Do you find yourself wanting to craft 802.11 packets,
 but you know you'll never be able to keep all the fields straight in your head?
 Write those packets in hext! hext (`*.hxt`) is a file format for writing small
-(or large, if you dare) binary files while letting you switch between
-hex, binary, and decimal. You can even use string literals.
+(or large, if you dare) binary files with comments. You can switch between hex,
+binary, and decimal and even stick some string literals in there.
 
 This is what a small GIF looks like:
 ```
