@@ -1,10 +1,10 @@
 [package]
 name = "hxt"
 version = "0.1.1"
-authors = ["genuinebyte <brad@genbyte.dev>"]
+authors = ["Genevieve <gen@nyble.dev>"]
 edition = "2018"
-description = "A binary file forming tool"
-repository = "https://github.com/genuinebyte/hext"
+description = "A binary file markup language"
+repository = "https://github.com/gennyble/hext"
 license = "ISC"
 keywords = ["binary", "hexadecimal", "cli"]
 categories = ["command-line-utilities"]
