@@ -61,7 +61,7 @@ impl Hext {
 			}
 		}
 
-		let mut bits: BitVec<Msb0, u8> = BitVec::new();
+		let mut bits: BitVec<u8, Msb0> = BitVec::new();
 		let mut state = State::ReadingHex;
 
 		loop {
