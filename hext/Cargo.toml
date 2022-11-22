@@ -1,6 +1,6 @@
 [package]
 name = "hext"
-version = "0.4.1"
+version = "0.4.2"
 authors = ["Genevieve <gen@nyble.dev>"]
 edition = "2021"
 description = "A binary file markup language"

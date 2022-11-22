@@ -1,6 +1,6 @@
 [package]
 name = "hxt"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["Genevieve <gen@nyble.dev>"]
 edition = "2021"
 description = "A binary file markup language"
